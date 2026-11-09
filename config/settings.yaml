@@ -1,0 +1,25 @@
+# Глобальные настройки «Сигнала». Значения по умолчанию рассчитаны на прототип;
+# в бою переопределяются переменными окружения SIGNAL_* (см. README).
+db_path: out/signal.db
+out_dir: out
+
+llm:                       # внутренний Qwen 3.8 за OpenAI-совместимым API (vLLM)
+  base_url: http://qwen.internal:8000/v1
+  model: qwen3.8
+  timeout_s: 120
+asr:                       # Qwen-ASR
+  base_url: http://qwen-asr.internal:8000/v1
+  model: qwen-asr
+vl:                        # Qwen-VL
+  base_url: http://qwen-vl.internal:8000/v1
+  model: qwen-vl
+
+pipeline:
+  window_days: 28                  # окно, по которому строятся кластеры и тренды
+  cluster_distance_threshold: 0.45 # косинусное расстояние для склейки карточек
+  extraction_retries: 1
+
+agent:
+  max_steps: 200                   # предохранитель от зацикливания
+  max_writes_per_run: 15           # лимит записей в трекер за прогон на продукт
+  examples_per_cluster: 5

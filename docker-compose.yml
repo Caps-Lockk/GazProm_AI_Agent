@@ -1,0 +1,29 @@
+# Пример развёртывания во внутреннем контуре. Расписание — внешнее (cron / Airflow):
+#   ежедневно 01:00:          docker compose run --rm nightly
+#   по понедельникам 06:00:   docker compose run --rm weekly
+# Адреса моделей — внутренние Qwen за vLLM; внешние API не используются.
+x-common: &common
+  build: .
+  environment:
+    SIGNAL_LLM_BASE_URL: http://qwen.internal:8000/v1
+    SIGNAL_ASR_BASE_URL: http://qwen-asr.internal:8000/v1
+    SIGNAL_VL_BASE_URL: http://qwen-vl.internal:8000/v1
+    SIGNAL_DB_PATH: /data/signal.db
+  volumes:
+    - signal-data:/data
+    - ./out:/app/out
+
+services:
+  nightly:
+    <<: *common
+    command: ["nightly", "--online", "--tickets", "/data/export.jsonl"]
+  weekly:
+    <<: *common
+    command: ["weekly", "--online", "--product", "webneft"]
+  demo:
+    <<: *common
+    environment: {}
+    command: ["eval"]
+
+volumes:
+  signal-data:

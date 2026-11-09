@@ -1,0 +1,12 @@
+{
+ "offer_opf": "NEW",
+ "offer_next": "NEW",
+ "vehicle_missing": "UPDATE",
+ "queue_404": "NEW",
+ "contact_phone": "NEW",
+ "contract_login": "SKIP",
+ "sms_code": "SKIP",
+ "documents": "SKIP",
+ "orders_history": "SKIP",
+ "outage": "EXCLUDED"
+}

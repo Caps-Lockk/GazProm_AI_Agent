@@ -1,0 +1,17 @@
+# Карточка продукта: всё, что агенту нужно знать о продукте, и пороги решений.
+# Один промпт обслуживает все продукты компании — различия живут здесь.
+id: webneft
+name: Вебнефть
+description: B2B-сервис для заказа топлива мелким оптом — договор оферты, личный кабинет, заявки на отгрузку, бронирование электронной очереди на налив.
+modules: [offer, account, orders, queue, vehicles, auth, documents, other]
+owner: product-owner-webneft
+delivery:
+  tracker_project: WN
+  digest_channel: "#webneft-product"
+thresholds:
+  period_days: 14          # период, за который считаем частоту
+  min_tickets: 5           # NEW: не меньше N обращений…
+  min_clients: 3           # …от не меньше M разных клиентов
+  growth_ratio: 2.0        # или рост неделя к неделе в K раз
+  min_growth_tickets: 3    # но не меньше 3 обращений за последнюю неделю
+  reject_cooldown_days: 90 # отклонённое командой не предлагаем повторно 90 дней

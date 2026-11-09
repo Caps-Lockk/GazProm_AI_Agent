@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>«Сигнал»: прогон агента по «Вебнефти»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#EEF2F7; --surface:#FFFFFF; --surface-2:#F6F8FB; --line:#D6DEE8;
+  --ink:#13233B; --ink-2:#4B5B72; --ink-3:#7A8699;
+  --brand:#0B5CAD; --brand-soft:#E3EEFA;
+  --new:#1E7F55; --new-soft:#E2F3EA; --upd:#9A6110; --upd-soft:#FBF0DD;
+  --skip:#6B778A; --skip-soft:#EDF0F4; --inc:#B3392E; --inc-soft:#FBE7E5;
+  --pii:#B3392E; --pii-soft:#FBE7E5; --mask:#0B5CAD; --on-brand:#FFFFFF;
+  --sans:"IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0E1622; --surface:#152132; --surface-2:#1A283B; --line:#2A3A52;
+    --ink:#E4EBF4; --ink-2:#A9B6C8; --ink-3:#7F8DA2;
+    --brand:#5AA2EC; --brand-soft:#16304D;
+    --new:#4CC28A; --new-soft:#123426; --upd:#E2A84B; --upd-soft:#3A2B12;
+    --skip:#97A3B6; --skip-soft:#212D3E; --inc:#EE7B70; --inc-soft:#3D1D1A;
+    --pii:#EE7B70; --pii-soft:#3D1D1A; --mask:#5AA2EC; --on-brand:#0E1622;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0E1622; --surface:#152132; --surface-2:#1A283B; --line:#2A3A52;
+  --ink:#E4EBF4; --ink-2:#A9B6C8; --ink-3:#7F8DA2;
+  --brand:#5AA2EC; --brand-soft:#16304D;
+  --new:#4CC28A; --new-soft:#123426; --upd:#E2A84B; --upd-soft:#3A2B12;
+  --skip:#97A3B6; --skip-soft:#212D3E; --inc:#EE7B70; --inc-soft:#3D1D1A;
+  --pii:#EE7B70; --pii-soft:#3D1D1A; --mask:#5AA2EC; --on-brand:#0E1622;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+.mono{font-family:var(--mono)}
+.tid{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+
+/* шапка с пультом */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:16px;padding:12px 0;flex-wrap:wrap}
+.bar h1{font-size:18px;line-height:1.25;margin:0;font-weight:600;flex:1 1 320px}
+.bar h1 small{display:block;font-size:13px;font-weight:400;color:var(--ink-2)}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 14px;font-size:14px}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--on-brand);font-weight:600;min-width:150px}
+.btn.primary:hover{filter:brightness(1.07)}
+.speed{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2)}
+.progress{height:3px;background:var(--line)}
+.progress i{display:block;height:100%;width:0;background:var(--brand);transition:width .25s}
+
+section{margin:28px 0}
+h2{font-size:20px;font-weight:600;margin:0 0 4px}
+.lead{color:var(--ink-2);margin:0 0 16px;max-width:72ch}
+
+/* ночной конвейер */
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.stage{padding:14px 16px;border-right:1px solid var(--line);position:relative}
+.stage:last-child{border-right:0}
+.stage:not(:last-child)::after{content:"";position:absolute;right:-7px;top:50%;width:12px;height:12px;background:var(--surface);border-top:1px solid var(--line);border-right:1px solid var(--line);transform:translateY(-50%) rotate(45deg);z-index:1}
+.stage b{display:block;font-size:26px;font-weight:600;line-height:1.1}
+.stage span{font-size:13px;color:var(--ink-2)}
+.stage em{display:block;font-style:normal;font-size:12px;color:var(--ink-3);margin-top:2px}
+
+.inspect{margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.pane h3{font-size:14px;margin:0 0 8px;font-weight:600}
+.pane .txt{font-size:14px;white-space:pre-wrap;word-break:break-word}
+mark.pii{background:var(--pii-soft);color:var(--pii);border-radius:3px;padding:0 2px}
+mark.msk{background:var(--brand-soft);color:var(--mask);border-radius:3px;padding:0 2px;font-family:var(--mono);font-size:12.5px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13.5px}
+.kv dt{color:var(--ink-3)}
+.kv dd{margin:0;word-break:break-word}
+.picker{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chipbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;font-size:12.5px;font-family:var(--mono)}
+.chipbtn[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+
+/* разбор агента */
+.stage-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.clusters{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.crow{display:grid;grid-template-columns:minmax(0,1fr) 72px 92px 118px;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);transition:background .3s}
+.crow:last-child{border-bottom:0}
+.crow.head{font-size:12px;color:var(--ink-3);padding-top:8px;padding-bottom:8px;background:var(--surface-2)}
+.crow .lbl{font-size:14px;line-height:1.35}
+.crow .lbl small{display:block;color:var(--ink-3);font-size:12px}
+.crow.active{background:var(--brand-soft)}
+.crow.out{opacity:.55}
+.num{font-size:13px;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+.status{justify-self:end;font-size:12.5px;font-weight:600;border-radius:999px;padding:3px 10px;white-space:nowrap;background:var(--skip-soft);color:var(--skip);border:1px solid transparent}
+.status.wait{background:transparent;border-color:var(--line);color:var(--ink-3);font-weight:500}
+.status.look{background:var(--brand-soft);color:var(--brand)}
+.status.NEW{background:var(--new-soft);color:var(--new)}
+.status.UPDATE{background:var(--upd-soft);color:var(--upd)}
+.status.SKIP{background:var(--skip-soft);color:var(--skip)}
+.status.INC{background:var(--inc-soft);color:var(--inc)}
+.status.flip{animation:flip .45s ease}
+@keyframes flip{0%{transform:scale(.85)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+.reason{grid-column:1/-1;font-size:12.5px;color:var(--ink-2);margin-top:-4px}
+svg.spark{display:block}
+
+.log{background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:620px;overflow:auto;position:sticky;top:96px}
+.log-head{position:sticky;top:0;background:var(--surface-2);border-bottom:1px solid var(--line);padding:8px 14px;font-size:12px;color:var(--ink-3);z-index:1}
+.log-empty{padding:28px 16px;color:var(--ink-3);font-size:14px}
+.entry{border-bottom:1px solid var(--line);padding:8px 14px}
+.entry summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:28px 1fr;gap:6px}
+.entry summary::-webkit-details-marker{display:none}
+.entry .n{font-family:var(--mono);font-size:12px;color:var(--ink-3);padding-top:2px}
+.entry .tool{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--brand)}
+.entry.write .tool{color:var(--new)}
+.entry.err .tool{color:var(--inc)}
+.entry .say{font-size:13.5px;color:var(--ink);display:block}
+.entry pre{margin:8px 0 2px 34px;font:12px/1.45 var(--mono);background:var(--surface-2);border-radius:6px;padding:8px 10px;overflow:auto;max-height:240px;color:var(--ink-2);white-space:pre-wrap;word-break:break-word}
+.entry.fresh{animation:fresh 1.2s ease}
+@keyframes fresh{from{background:var(--brand-soft)}to{background:transparent}}
+
+/* итог */
+.summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.tally{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:14px}
+.tally b{font-size:20px;margin-right:6px}
+.issues{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.issue{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--new);border-radius:10px;padding:14px 16px;min-width:0}
+.issue.upd{border-left-color:var(--upd)}
+.issue .id{font-family:var(--mono);font-size:12.5px;color:var(--ink-3)}
+.issue h3{font-size:15.5px;margin:2px 0 8px;line-height:1.35}
+.issue .body{font-size:13.5px;white-space:pre-wrap;color:var(--ink-2);word-break:break-word}
+.digest{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-top:14px;font-size:14px}
+.digest h3{margin:0 0 8px;font-size:15px}
+.digest ul{margin:0;padding-left:20px}
+.hidden{display:none}
+footer{color:var(--ink-3);font-size:13px;padding:24px 0 40px;border-top:1px solid var(--line);margin-top:40px}
+
+@media (max-width: 900px){
+  .stage-grid{grid-template-columns:1fr}
+  .log{position:static;max-height:420px}
+  .inspect{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr 1fr}
+  .stage{border-bottom:1px solid var(--line)}
+  .stage::after{display:none}
+}
+@media (max-width: 560px){
+  header{position:static}
+  body::before{display:none}
+  .crow{grid-template-columns:minmax(0,1fr) 92px;row-gap:4px}
+  .crow .num,.crow svg.spark,.crow.head .h-sp,.crow.head .h-n{display:none}
+  .flow{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap bar">
+    <h1>«Сигнал» разбирает обращения «Вебнефти»
+      <small id="sub">Реальный прогон прототипа на 66 синтетических обращениях, неделя до 8 ноября 2026</small></h1>
+    <div class="controls">
+      <button class="btn primary" id="play">Запустить разбор</button>
+      <button class="btn" id="step">Один шаг</button>
+      <button class="btn" id="end">Сразу к итогу</button>
+      <button class="btn" id="reset">Сначала</button>
+      <label class="speed">Скорость
+        <select id="speed" class="btn" style="padding:5px 8px">
+          <option value="1100">медленно</option><option value="550" selected>обычно</option><option value="180">быстро</option>
+        </select></label>
+    </div>
+  </div>
+  <div class="progress"><i id="prog"></i></div>
+</header>
+
+<main class="wrap">
+  <section>
+    <h2>Ночной конвейер подготовил данные</h2>
+    <p class="lead">Каждую ночь обращения выгружаются, звонки расшифровываются, персональные данные маскируются до любого вызова языковой модели, а из текста получается карточка. Похожие карточки складываются в кластеры — это «проблемы», которые разбирает агент.</p>
+    <div class="flow" id="flow"></div>
+    <div class="inspect">
+      <div class="pane">
+        <h3>Обращение как пришло</h3>
+        <div class="picker" id="picker"></div>
+        <div class="txt" id="rawTxt"></div>
+      </div>
+      <div class="pane">
+        <h3>После маскирования ПДн</h3>
+        <div class="txt" id="maskTxt"></div>
+      </div>
+      <div class="pane">
+        <h3>Карточка для агента</h3>
+        <dl class="kv" id="cardKv"></dl>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Агент разбирает кластеры</h2>
+    <p class="lead" id="agentLead">Нажмите «Запустить разбор»: справа по очереди появятся настоящие вызовы инструментов агента из журнала прогона, слева — решение по каждому кластеру. Любую строку журнала можно раскрыть и увидеть аргументы и ответ инструмента.</p>
+    <div class="stage-grid">
+      <div class="clusters" id="clusters"></div>
+      <div class="log" id="log" aria-live="polite">
+        <div class="log-head">Журнал вызовов инструментов</div>
+        <div class="log-empty" id="logEmpty">Агент ещё не запущен.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="result" class="hidden">
+    <h2>Что получила продуктовая команда</h2>
+    <p class="lead">Черновики задач в трекере с шагами воспроизведения и ID обращений-доказательств, комментарий к уже открытой задаче и недельный дайджест владельцу продукта.</p>
+    <div class="summary" id="tally"></div>
+    <div class="issues" id="issues"></div>
+    <div class="digest" id="digest"></div>
+  </section>
+
+  <footer>Страница воспроизводит журнал прогона <span class="mono" id="runid"></span> без изменений. Вместо Qwen 3.8 в прототипе работает офлайн-модель, которая следует правилам промпта; инструменты, их защиты, хранилище и доставка — те же, что в боевой версии.</footer>
+</main>
+
+<script>
+const DATA = __DATA__;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const plural = (n, a, b, c) => { const m10 = n % 10, m100 = n % 100; return m10 === 1 && m100 !== 11 ? a : (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? b : c); };
+const TYPE = {bug:"дефект", feature:"пожелание", ux:"удобство", consultation:"консультация", access:"доступ", incident:"инцидент"};
+
+/* ---------- конвейер ---------- */
+const n = DATA.nightly;
+const calls = DATA.tickets.filter(t => t.channel === "call").length;
+const imgs = DATA.tickets.filter(t => t.has_image).length;
+const piiCount = DATA.tickets.reduce((s, t) => s + (t.masked.match(/\[(FIO|PHONE|EMAIL|INN|PLATE|LOGIN|PASSWORD)\]/g) || []).length, 0);
+const toAgent = DATA.clusters.filter(c => !c.incident && c.tickets_period >= 2).length;
+$("#flow").innerHTML = [
+  [n.ingested, "обращений выгружено", `${calls} звонков, ${n.ingested - calls} заявок`],
+  [calls + imgs, "медиа распознано", `Qwen-ASR и Qwen-VL`],
+  [piiCount, "фрагментов ПДн скрыто", "ФИО, телефоны, ИНН, номера машин"],
+  [n.carded, "карточек извлечено", `${n.needs_review} на ручную проверку`],
+  [n.clusters, "кластеров", `${toAgent} передано агенту`],
+].map(([v, l, e]) => `<div class="stage"><b>${v}</b><span>${l}</span><em>${e}</em></div>`).join("");
+
+const PII_RE = /([А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+(?:вич|вна|ична|чна)(?![а-яё])|[А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s?[А-ЯЁ]\.|(?:\+7|8)[\s(-]*\d{3}[\s)-]*\d{3}[\s-]*\d{2}[\s-]*\d{2}|[\w.+-]+@[\w-]+\.[\w.-]+|(?<![\d.])\d{10}(?:\d{2}|\d{3}|\d{5})?(?![\d.])|[АВЕКМНОРСТУХ]\d{3}[АВЕКМНОРСТУХ]{2}\d{2,3})/g;
+const showcase = DATA.tickets.filter(t => t.raw !== t.masked).sort((a, b) =>
+  (b.masked.match(/\[/g) || []).length - (a.masked.match(/\[/g) || []).length).slice(0, 5);
+function showTicket(t) {
+  document.querySelectorAll("#picker button").forEach(b => b.setAttribute("aria-pressed", b.dataset.id === t.id));
+  $("#rawTxt").innerHTML = esc(t.raw).replace(PII_RE, m => `<mark class="pii">${m}</mark>`);
+  $("#maskTxt").innerHTML = esc(t.masked).replace(/\[(FIO|PHONE|EMAIL|INN|PLATE|LOGIN|PASSWORD)\]/g, m => `<mark class="msk">${m}</mark>`);
+  const c = t.card;
+  $("#cardKv").innerHTML = [
+    ["Тикет", `<span class="mono">${esc(t.id)}</span> · ${t.channel === "call" ? "звонок" : "заявка"}`],
+    ["Модуль", esc(c.module)], ["Тип", TYPE[c.type] || c.type], ["Критичность", esc(c.criticality)],
+    ["Сигнатура", esc(c.signature)], ["Шаги", c.steps.length ? c.steps.map(esc).join("<br>") : "нет в обращении"],
+  ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+}
+$("#picker").innerHTML = showcase.map(t => `<button class="chipbtn" data-id="${t.id}">${t.id}${t.channel === "call" ? " ☎" : ""}</button>`).join("");
+$("#picker").addEventListener("click", e => { const b = e.target.closest("button"); if (b) showTicket(DATA.tickets.find(t => t.id === b.dataset.id)); });
+showTicket(showcase[0]);
+
+/* ---------- кластеры ---------- */
+const order = [...DATA.clusters].sort((a, b) => (a.incident - b.incident) || (b.tickets_period - a.tickets_period));
+function spark(tr) {
+  const w = 64, h = 22, mx = Math.max(...tr, 1), bw = w / tr.length;
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="по неделям: ${tr.join(", ")}">` +
+    tr.map((v, i) => `<rect x="${i * bw + 2}" y="${h - Math.max(2, v / mx * (h - 2))}" width="${bw - 4}" height="${Math.max(2, v / mx * (h - 2))}" rx="1.5" fill="${i === tr.length - 1 ? "var(--brand)" : "var(--ink-3)"}" opacity="${i === tr.length - 1 ? 1 : .45}"/>`).join("") + `</svg>`;
+}
+const STATUS = {wait:"ждёт разбора", look:"изучает", NEW:"новая задача", UPDATE:"дополнена", SKIP:"пропущен", INC:"инцидент", OUT:"единичное"};
+function renderClusters() {
+  $("#clusters").innerHTML = `<div class="crow head"><span>Кластер (проблема)</span><span class="h-sp">4 недели</span><span class="num h-n">обращ. / клиент.</span><span style="justify-self:end">Решение</span></div>` +
+    order.map(c => {
+      const fixed = c.incident ? "INC" : (c.tickets_period < 2 ? "OUT" : null);
+      return `<div class="crow ${fixed ? "out" : ""}" id="r-${c.id}">
+        <span class="lbl">${esc(c.label)}<small>${TYPE[c.type] || c.type} · ${esc(c.module)}</small></span>
+        ${spark(c.trend)}
+        <span class="num">${c.tickets_period} / ${c.clients}</span>
+        <span class="status ${fixed ? (fixed === "INC" ? "INC" : "SKIP") : "wait"}" id="s-${c.id}">${STATUS[fixed || "wait"]}</span>
+        <span class="reason" id="why-${c.id}">${c.incident ? "Сбой сервиса уходит дежурной смене, агенту не передаётся." : (fixed ? "Одно обращение — не повторяющаяся проблема." : "")}</span>
+      </div>`;
+    }).join("");
+}
+
+/* ---------- журнал ---------- */
+const S = DATA.steps;
+const decisions = Object.fromEntries(DATA.decisions.map(d => [d.cluster_id, d]));
+const labelOf = id => (DATA.clusters.find(c => c.id === id) || {}).label || id;
+function say(st) {
+  const r = st.out.result, a = st.args;
+  if (st.out.error) return `Инструмент отказал: ${st.out.error}`;
+  switch (st.tool) {
+    case "get_product_card": { const t = r.thresholds; return `Пороги продукта: от ${t.min_tickets} обращений от ${t.min_clients} клиентов за ${t.period_days} дней или рост в ${t.growth_ratio} раза за неделю.`; }
+    case "get_clusters": return `К разбору ${r.length} ${plural(r.length, "кластер", "кластера", "кластеров")}; инциденты и единичные обращения отсеяны.`;
+    case "get_cluster_examples": return `«${labelOf(a.cluster_id)}»: ${r.length} ${plural(r.length, "пример", "примера", "примеров")} — ${r.map(e => e.ticket_id).join(", ")}.`;
+    case "get_cluster_trend": return `Динамика по неделям: ${r.map(w => w.tickets).join(" → ")}.`;
+    case "get_feedback": return r.length ? `Команда уже оценивала: «${r[0].verdict === "not_a_problem" ? "не проблема" : r[0].verdict}», ${r[0].days_ago} дн. назад — ${r[0].comment}.` : "Прошлых оценок команды нет.";
+    case "search_backlog": return r.length ? `Похожие задачи: ${r.map(i => `${i.issue_id} (${i.status === "closed" ? "закрыта" : i.status === "open" ? "открыта" : i.status}, сходство ${String(i.score).replace(".", ",")})`).join("; ")}.` : "В бэклоге ничего похожего.";
+    case "create_backlog_draft": return `Создан черновик ${r.issue_id}: «${a.title}».`;
+    case "comment_existing_issue": return `Задача ${r.issue_id} дополнена новыми случаями.`;
+    case "send_digest": return `Дайджест отправлен владельцу продукта: ${r.items} ${plural(r.items, "пункт", "пункта", "пунктов")}.`;
+  }
+  return "";
+}
+let i = 0, timer = null, current = null;
+function setStatus(id, kind, reason) {
+  const el = $("#s-" + id); if (!el) return;
+  el.className = "status " + kind + (kind !== "look" ? " flip" : "");
+  el.textContent = STATUS[kind];
+  if (reason !== undefined) $("#why-" + id).textContent = reason;
+}
+function focusRow(id) {
+  document.querySelectorAll(".crow.active").forEach(r => r.classList.remove("active"));
+  const row = $("#r-" + id); if (row) row.classList.add("active");
+}
+function apply(st, k, animate) {
+  $("#logEmpty")?.remove();
+  const write = ["create_backlog_draft", "comment_existing_issue", "send_digest"].includes(st.tool);
+  const d = document.createElement("details");
+  d.className = "entry" + (write ? " write" : "") + (st.out.error ? " err" : "") + (animate ? " fresh" : "");
+  d.innerHTML = `<summary><span class="n">${k + 1}</span><span><span class="tool">${st.tool}</span><span class="say">${esc(say(st)).replace(/T-\d{2}-\d{4}/g, m => `<span class="tid">${m}</span>`)}</span></span></summary>` +
+    `<pre>аргументы: ${esc(JSON.stringify(st.args, null, 1))}\n\nответ: ${esc(JSON.stringify(st.out, null, 1).slice(0, 2500))}</pre>`;
+  $("#log").appendChild(d);
+  if (animate) $("#log").scrollTop = $("#log").scrollHeight;
+  const cid = st.args.cluster_id;
+  if (cid && cid !== current) {
+    if (current && $("#s-" + current)?.classList.contains("look")) finishSkip(current);
+    current = cid; focusRow(cid); setStatus(cid, "look");
+  }
+  if (st.tool === "create_backlog_draft" && st.out.result) setStatus(cid, "NEW", `Черновик ${st.out.result.issue_id} в трекере.`);
+  if (st.tool === "comment_existing_issue" && st.out.result) setStatus(cid, "UPDATE", `Новые случаи добавлены в ${st.out.result.issue_id}.`);
+  if (st.tool === "send_digest" && current && $("#s-" + current)?.classList.contains("look")) finishSkip(current);
+}
+function finishSkip(id) {
+  const d = decisions[id];
+  if (d && d.decision === "SKIP") setStatus(id, "SKIP", "Причина: " + d.reason + ".");
+}
+function finish() {
+  DATA.decisions.filter(d => d.decision === "SKIP").forEach(d => finishSkip(d.cluster_id));
+  document.querySelectorAll(".crow.active").forEach(r => r.classList.remove("active"));
+  $("#result").classList.remove("hidden");
+  $("#play").textContent = "Разбор завершён";
+}
+function tick(animate = true) {
+  if (i >= S.length) { stop(); finish(); return false; }
+  apply(S[i], i, animate); i++;
+  $("#prog").style.width = (i / S.length * 100) + "%";
+  if (i >= S.length) { stop(); finish(); }
+  return true;
+}
+function play() {
+  if (i >= S.length) return;
+  if (timer) { stop(); return; }
+  $("#play").textContent = "Пауза";
+  timer = setInterval(tick, +$("#speed").value);
+}
+function stop() { clearInterval(timer); timer = null; if (i < S.length) $("#play").textContent = "Продолжить"; }
+function reset() {
+  stop(); i = 0; current = null; renderClusters();
+  $("#log").innerHTML = `<div class="log-head">Журнал вызовов инструментов</div><div class="log-empty" id="logEmpty">Агент ещё не запущен.</div>`;
+  $("#prog").style.width = "0"; $("#result").classList.add("hidden"); $("#play").textContent = "Запустить разбор";
+}
+$("#play").onclick = play;
+$("#step").onclick = () => { stop(); tick(); };
+$("#end").onclick = () => { stop(); while (i < S.length) tick(false); $("#result").scrollIntoView({behavior: "smooth"}); };
+$("#reset").onclick = reset;
+$("#speed").onchange = () => { if (timer) { stop(); play(); } };
+
+/* ---------- итог ---------- */
+const cnt = k => DATA.decisions.filter(d => d.decision === k).length;
+$("#tally").innerHTML = [["NEW", "новых задач", "var(--new)"], ["UPDATE", "дополнена", "var(--upd)"], ["SKIP", "пропущено с причиной", "var(--skip)"]]
+  .map(([k, l, c]) => `<div class="tally"><b style="color:${c}">${cnt(k)}</b>${l}</div>`).join("");
+const touched = DATA.decisions.filter(d => d.issue_id);
+$("#issues").innerHTML = touched.map(d => {
+  const b = DATA.backlog.find(x => x.issue_id === d.issue_id);
+  if (d.decision === "UPDATE") {
+    const cm = b.comments.at(-1);
+    return `<article class="issue upd"><div class="id">${b.issue_id} · открыта ранее · комментарий агента</div><h3>${esc(b.title)}</h3><div class="body">${esc(cm.text)}</div></article>`;
+  }
+  return `<article class="issue"><div class="id">${b.issue_id} · черновик</div><h3>${esc(b.title)}</h3><div class="body">${esc(b.body)}</div></article>`;
+}).join("");
+const dg = DATA.digest.split("\n");
+$("#digest").innerHTML = `<h3>${esc(dg[0].replace(/^#\s*/, ""))}</h3><ul>` +
+  dg.filter(l => l.startsWith("- ")).map(l => `<li>${esc(l.slice(2)).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")}</li>`).join("") +
+  `</ul><p style="margin:10px 0 0;color:var(--ink-2)">${esc(dg.at(-1))}</p>`;
+$("#runid").textContent = DATA.run_id;
+renderClusters();
+</script>
+</body>
+</html>
